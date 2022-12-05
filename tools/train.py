@@ -29,11 +29,10 @@ if DEBUG:
 import os
 
 #=======================================================================================================
-from avcv.all import *
-
-from kmaker.data import *
-from kmaker.dataloader import *
-from kmaker.model import *
+from avcv.all import * # utilities for computer vision
+from kmaker.data import * 
+from kmaker.dataloader import * 
+from kmaker.model import *  
 
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 
