@@ -1,4 +1,3 @@
 transformers==4.24.0
 avcv==0.0.49
-pytorch_lightning
-timm
+fast_ple
