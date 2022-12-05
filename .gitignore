@@ -3,3 +3,5 @@ data
 lightning_logs
 pretrained
 outputs
+**/*/.ipynb_checkpoints
+
