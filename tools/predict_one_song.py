@@ -1,15 +1,12 @@
 
 from avcv.all import *
 from kmaker.dataloader import *
-from kmaker.segment_utils import box_cxcywh_to_xyxy
-
 from tools.make_karaoke_video import *
-from tools.test_submit import (Segment, convert_result_to_competion_format,
-                               load_eval_model, preproc)
+from tools.test_submit import *
 
 
 class Predictor:
-    def __init__(self, ckpt_path='lightning_logs/base_detection_no_ckpt_1k/08/ckpts/epoch=116_val_loss_giou=0.0000.ckpt', sot=True):
+    def __init__(self, ckpt_path='pretrained/whisper_karaoke_base_vn.pth', sot=True):
         self.eval_model = load_eval_model(ckpt_path, sot=sot)
         self.collate_fn = collate_fn_with_sot if sot else collate_fn_without_sot
 
@@ -62,5 +59,5 @@ if __name__ == "__main__":
         os.path.basename(json_file).replace(".json", ".mp4"),
     )
     
-    make_mp4(pred_path, audio_file, output_video_path)
+    make_karaoke_video(pred_path, audio_file, output_video_path)
     print('-> {}'.format(osp.abspath(output_video_path)))

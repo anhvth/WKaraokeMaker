@@ -1,0 +1,1 @@
+pretrained/whisper_karaoke_base_vn.pth filter=lfs diff=lfs merge=lfs -text

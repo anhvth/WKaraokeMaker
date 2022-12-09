@@ -150,7 +150,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     )
     os.remove(tmp_out_video)
 
-def make_mp4(json_file, audio_file, output_video_path):
+def make_karaoke_video(json_file, audio_file, output_video_path):
     """
     Make mp4 from json and audio
     """
@@ -198,5 +198,5 @@ if __name__ == "__main__":
             output_video,
             os.path.basename(json_file).replace(".json", ".mp4"),
         )
-        make_mp4(json_file, audio_file, output_video_path)
+        make_karaoke_video(json_file, audio_file, output_video_path)
         print('-> {}'.format(osp.abspath(output_video_path)))
