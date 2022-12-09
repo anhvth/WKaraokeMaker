@@ -22,5 +22,5 @@ It is a task that can be used in various fields such as music production and kar
 ```
 
 
-## Example karaok video
+## Example karaoke video
 [![Watch the video](./asset/demo.png)](https://youtu.be/16RjtOygs7o)
