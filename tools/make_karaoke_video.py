@@ -11,7 +11,8 @@ from moviepy.editor import AudioFileClip, VideoFileClip
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-
+FONT = '/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf'
+assert osp.exists(FONT), f'Font {FONT} does not exist'
 def torch_load_audio(audio_path, sr=16000):
     """
     Load audio using torchaudio
@@ -22,7 +23,7 @@ def torch_load_audio(audio_path, sr=16000):
 
 class UTF8TextWriter:
     def __init__(self, color=(255, 0, 0)):
-        self.cv2_img_add_text = self.init_parameters(self.cv2_img_add_text, font='/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf', text_size=24, text_rgb_color=color)
+        self.cv2_img_add_text = self.init_parameters(self.cv2_img_add_text, font=FONT, text_size=24, text_rgb_color=color)
         
     def __call__(self, img, text, left_corner, **option):
         return self.cv2_img_add_text(img, text, left_corner, **option)
