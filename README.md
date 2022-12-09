@@ -34,5 +34,5 @@ It is a task that can be used in various fields such as music production and kar
 
 
 ## Limitation
-* The current model only trained on Vietnamese dataset
+* The current model only trained on Vietnamese music dataset
 * Length of the audio must be less than 30s
