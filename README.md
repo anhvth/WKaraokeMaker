@@ -24,5 +24,5 @@ It is a task that can be used in various fields such as music production and kar
 
 ## Example karaok video
 ```
-    ./asset/demo.mp4
+    https://github.com/anhvth/WKaraokeMaker/blob/main/ee6eb1a3b2bdf727.mp4
 ```
