@@ -1,4 +1,5 @@
 from kmaker.data import *
+
 # Data utils
 
 def stack_input(inputs, target_shape=[80, 3000]):
@@ -27,15 +28,16 @@ def stack_1d(tensors, pad_val=-100):
     return z
     
 
-def get_data(pkl, ds_set_name):
-    training_data = mmcv.load(pkl)
-    valid_trainval = training_data[training_data.is_valid_word_ts]
-    valid_trainval = valid_trainval.sample(frac=1, random_state=0)
-    valid_trainval['it'] = valid_trainval.path.apply(lambda x: ItemAudioLabel(x))
-    n_train = int(0.85*len(valid_trainval))
-    train_df = valid_trainval[:n_train]
-    val_df = valid_trainval[n_train:]
-    return train_df if ds_set_name == 'train' else val_df
+def get_data(txt_split):
+    """ Get path to json file from txt_split
+
+    Args:
+        txt_split: path to txt file
+
+    Returns:
+        list: list of path to json file
+    """
+    return [_[:-1] for _ in open(txt_split).read().splitlines()]
 
 
 

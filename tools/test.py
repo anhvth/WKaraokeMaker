@@ -39,24 +39,22 @@ def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_t
     return target
 
 
-def preproc(path):
-    """_summary_
+def preproc(json_path):
+    """ Preprocess json file
 
     Args:
         path (str): path to json file
     Returns:
         tuple: (item, batch)
     """
-    item = ItemAudioLabel(path, spliter='|', is_training=False) 
+    item = ItemAudioLabel(json_path, spliter='|', is_training=False) 
     rt =  dict(inputs=item.mel)
     rt.update(item.get_words_meta())
     rt['w2v_tokens'] = item.w2v_tokens
     rt['idx'] = None
     rt['transcript'] = item.transcript
-    audio = item.audio
-    json_path = item.path
-
     batch = collate_fn([rt], False)
+    
     with torch.inference_mode():
         for k, v in batch.items():
             batch[k] = v.cuda() if hasattr(v, 'cuda') else v
