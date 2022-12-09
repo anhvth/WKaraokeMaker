@@ -23,6 +23,4 @@ It is a task that can be used in various fields such as music production and kar
 
 
 ## Example karaok video
-```
-    ./asset/demo.mp4
-```
+[![Watch the video](https://img.youtube.com/vi/16RjtOygs7o/0.jpg)](https://youtu.be/16RjtOygs7o)
