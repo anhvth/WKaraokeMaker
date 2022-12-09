@@ -1,3 +1,7 @@
+# Author: AnhVo
+# Date: 2022-12-12
+
+
 import os
 import os.path as osp
 from glob import glob
@@ -65,7 +69,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     """
     # Load audio and lyrics
     # audio = torch_load_audio(audio_path, sr=16000)
-    utf8_text_writer = UTF8TextWriter()
+    utf8_text_writer_white = UTF8TextWriter(color=(255, 255, 255))
     utf8_text_writer_green = UTF8TextWriter(color=(0, 255, 0))
 
     lyrics = mmcv.load(lyrics_path)
@@ -80,7 +84,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     start_time = 0  # lyrics.pop(0)['s']
     end_time = lyrics.pop(-1)["e"]
     num_frames = int((end_time - start_time) * fps)
-    height, width = 300, 1280
+    height, width = 200, 720
     frames = np.zeros((num_frames, height, width, 3), dtype=np.uint8)
 
     for i, line in enumerate(lyrics):
@@ -89,23 +93,12 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
 
         text_line = " ".join([word["d"] for word in line["l"]])
         first_frame_line = frames[start_line_frame].copy() * 0
-        # Puttext to first frame using opencv
-        # text_line = convert_vietnamese_text_to_english_text(text_line)
-        # Put bold text to first frame in the center
 
-        # cv2.putText(
-        #     first_frame_line,
-        #     text_line,
-        #     (int(width / 5), int(height / 2)),
-        #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     1,
-        #     (255, 255, 255),
-        #     2,
-        #     cv2.LINE_AA,
-        # )
-        first_frame_line = utf8_text_writer(first_frame_line, text_line, (int(width / 5), int(height / 2)), text_rgb_color=(255, 255, 255), text_size=1)
-
-
+        
+        text_len_in_pixel = len(text_line) * 12
+        start_y = int((width - text_len_in_pixel) / 2)
+        
+        first_frame_line = utf8_text_writer_white(first_frame_line, text_line, (start_y, 50), text_rgb_color=(255, 255, 255), text_size=1)
 
         # Print text and time
         print(
@@ -128,16 +121,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
             middle_word_frame = frames[
                 start_word_frame + (end_word_frame - start_word_frame)// 2
             ].copy()
-            middle_word_frame = utf8_text_writer_green(middle_word_frame, current_text_line, (int(width / 5), int(height / 2)), text_rgb_color=(0, 255, 0), text_size=1)
-            # cv2.putText(
-            #     middle_word_frame,
-            #     current_text_line,
-            #     (int(width / 5), int(height / 2)),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0),
-            #     3,
-            # )
+            middle_word_frame = utf8_text_writer_green(middle_word_frame, current_text_line, (start_y, 50), text_rgb_color=(0, 255, 0), text_size=1)
 
             frames[start_word_frame:end_word_frame] = middle_word_frame
 
@@ -162,7 +146,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
 
     os.system(
-        f"ffmpeg -i {tmp_out_video} -i {audio_path} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 {output_video_path}"
+        f"ffmpeg  -y -i {tmp_out_video} -i {audio_path} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 {output_video_path}"
     )
     os.remove(tmp_out_video)
 
