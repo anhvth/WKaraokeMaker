@@ -3,9 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import whisper
 from fastcore.all import patch
-from ple.all import *
-from transformers import (AutoModelForSpeechSeq2Seq, AutoProcessor,
-                          WhisperTokenizer)
+
+from transformers import AutoModelForSpeechSeq2Seq
 
 from kmaker.data import wtokenizer
 
