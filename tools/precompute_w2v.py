@@ -1,4 +1,4 @@
-# Author: AnhVo\
+# Author: AnhVo
 # This script is used to precompute w2v alignment for all training data, it is required to run before training,
 # if you only use this project for inference, ignore this script
 
@@ -26,7 +26,7 @@ def precompute_w2v(json_path, w2v_aligner, audio_file=None):
     name = get_name(json_path)
     item_audio_label = ItemAudioLabel(json_path, audio_file=audio_file)
     cache_path = item_audio_label.audio_file.replace('/songs/', '/precomputed_giou/')[:-3]+'pkl'
-    if not osp.exists(cache_path):
+    if not osp.exists(cache_path) or 1:
         gious = []
         outputs = w2v_aligner(item_audio_label, separator='|')
         pred_segments = merge_words(outputs['segments'], '|')
@@ -47,8 +47,13 @@ def precompute_w2v(json_path, w2v_aligner, audio_file=None):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--txt_split', default='data/training/train.txt', help='Path to txt file')
+    parser.add_argument('--ckpt', default='pretrained/epoch=43_val_loss=0.0000.ckpt', help='Path to checkpoint')
+    
+    # Multi tmux process, each tmux will run a number of total/max_parallel_process sequentially
+    
     parser.add_argument('--dry-run', action='store_true', default=False, help='Run with this option to get commands')
-    parser.add_argument('--total',default=16, type=int, help='Num of splits, ')
+    parser.add_argument('--total',default=1, type=int, help='Num of splits, ')
     parser.add_argument('--task',default=0,type=int, help='Task id, when dry-run is on, this is untouch')
     parser.add_argument('--gpus',default='0,1,2,3,4,5,6,7', help='List of gpus used, when dry-run is on')
     parser.add_argument('--max_parallel_process',default=16,type=int, help='Num of process runing in parallel, \
@@ -56,7 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', default='multi_infer')
     args = parser.parse_args()
     
-    w2v_aligner = W2vForceAligner('pretrained/epoch=43_val_loss=0.0000.ckpt', device='cuda')
+    w2v_aligner = W2vForceAligner(args.ckpt, device='cuda')
     if args.dry_run:
         # Split task to different process runing on multi process
         cur_file = (osp.relpath(__file__))
@@ -78,7 +83,10 @@ if __name__ == '__main__':
             os.system(f"tmux new -s '{args.name}_{group_id:02d}' -d 'sh {tmp_file} && echo Done && sleep 10'")
     else:
 
-        json_paths = mmcv.load('./data/training/training_data.pkl').path.tolist()
+        # json_paths = mmcv.load('./data/training/training_data.pkl').path.tolist()
+        json_paths = get_json_paths(args.txt_split)
         tobe_run = []
         for inp in tqdm(json_paths[args.task::args.total]):
             precompute_w2v(inp, w2v_aligner)
+            
+        print(f'Done {args.task} of {args.total}')

@@ -1,21 +1,12 @@
+# Largely copied from https://pytorch.org/tutorials/intermediate/forced_alignment_with_torchaudio_tutorial.html
 
-
-# from transformers.file_utils import cached_path, hf_bucket_url
-import os
-import zipfile
-
-import IPython
-import matplotlib
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchaudio
 from avcv.all import *
-from IPython.display import Audio, display
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-from .bbox_utils import *
+from .segment_utils import *
 from .segment import *
 
 
@@ -196,37 +187,6 @@ def get_ctc_loss(item, res):
     return F.ctc_loss(input, target, input_lengths, target_lengths, blank=109, )
     
     
-
-    
-def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_to_milisec_ratio):
-    """
-        pred_word_segments: predictions list 
-                [['Những', 0.26025, 0.4204375],
-                 ['niềm', 0.5405625, 0.8209375],
-                 ['đau', 1.12125, 1.2814375],...]
-        json_path: competion format output placeholder
-    """
-
-    pred_i = 0
-    target = mmcv.load(json_path)
-    for i, line in enumerate(target):
-        for j, word in enumerate(line['l']):
-            
-            pred_word = pred_word_segments[pred_i]
-            s = int(pred_word.start*word_idx_to_milisec_ratio)
-            e = int(pred_word.end*word_idx_to_milisec_ratio)
-            
-            if j == 0:
-                target[i]['s'] = s
-            elif j == len(line['l'])-1:
-                target[i]['e'] = e
-                
-            target[i]['l'][j]['s'] = s
-            target[i]['l'][j]['e'] = e
-            
-            pred_i += 1
-    return target
-
 
 
 class W2vForceAligner:

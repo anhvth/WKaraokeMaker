@@ -9,7 +9,7 @@ from transformers import (AutoModelForSpeechSeq2Seq, AutoProcessor,
 
 from kmaker.data import wtokenizer
 
-from .bbox_utils import *
+from .segment_utils import *
 
 
 def get_whisper(model_name):
@@ -244,7 +244,7 @@ def modify_whisper(model, sot):
         enc_loss = None
         if ctc_labels is not None:
             enc_loss = cal_ctc(enc_logits, ctc_labels)
-        bbox_loss = None
+        segment_loss = None
         return dict(
             enc_logits = enc_logits,
             enc_loss = enc_loss,
@@ -254,24 +254,6 @@ def modify_whisper(model, sot):
         )
     return model
 
-def calulcate_bbox_loss(src_boxes, target_boxes):
-    
-    src_boxes_xyxy = box_cxcywh_to_xyxy(src_boxes)
-    target_boxes_xyxy = box_cxcywh_to_xyxy(target_boxes)
-    
-    F = torch.nn.functional
-    loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
 
-    losses = {}
-    losses['loss_bbox'] = loss_bbox.mean(1)
-
-    loss_giou = 1 - torch.diag(generalized_box_iou(
-        src_boxes_xyxy,
-        target_boxes_xyxy), )
-    losses['loss_giou'] = loss_giou
-    return losses
-
-
-    
 
 

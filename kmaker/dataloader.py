@@ -1,6 +1,6 @@
 from kmaker.data import *
 
-# Data utils
+# Data utils/ augmentation
 
 def stack_input(inputs, target_shape=[80, 3000]):
     batch_shape = [len(inputs), *target_shape]
@@ -26,24 +26,17 @@ def stack_1d(tensors, pad_val=-100):
         _l = len(t)
         z[i, :_l] = t
     return z
-    
 
-def get_data(txt_split):
-    """ Get path to json file from txt_split
+
+def pad_left(item:ItemAudioLabel):
+    """ Audio augmentation: pad left
 
     Args:
-        txt_split: path to txt file
+        item:AudioLabel
 
     Returns:
-        list: list of path to json file
+        item:AudioLabel
     """
-    return [_[:-1] for _ in open(txt_split).read().splitlines()]
-
-
-
-
-
-def pad_left(item):
     item = item.copy()
 
     current_len = item['inputs'].shape[1]
@@ -67,9 +60,6 @@ def pad_left(item):
     
     return item
 
-
-# In[248]:
-
 music_token = wtokenizer.non_speech_tokens[43]
 def mask_out(item):
     out_tokens = list(item['tokens'].copy())
@@ -86,6 +76,9 @@ def mask_out(item):
 
 
 def collate_fn_without_sot(items, is_training):
+    """
+        Simplified version of whisper input
+    """
     if is_training:
         items = [pad_left(item) for item in items]
         items = [mask_out(item) for item in items] # mask out words with music token
@@ -122,6 +115,10 @@ def collate_fn_without_sot(items, is_training):
 
 
 def collate_fn_with_sot(items, is_training):
+    """
+        Input starts with <sot> and ends with <eot> as in whisper
+    """
+    
     if is_training:
         items = [pad_left(item) for item in items]
         items = [mask_out(item) for item in items] # mask out words with music token
@@ -161,16 +158,18 @@ def collate_fn_with_sot(items, is_training):
 
 
 class AudioDataset:
-    def __init__(self, audio_labels, dsset=None):
-        self.audio_labels = audio_labels
-        self.l = len(self.audio_labels)
-        self.dsset = dsset
+    """Create a dataset for audio data. Input is path_to_jsons, each item of this dataset is a dict of \
+        'inputs', 'labels', 'dec_pos', 'bboxes', 'masks', 'loss_scale', 'w2v_labels', 'ids', 'transcript'"""
+    def __init__(self, json_paths, ds_name=None):
+        assert ds_name in ['train', 'val', 'test', None]
+                           
+        self.audio_labels = [ItemAudioLabel(_) for _ in json_paths]
+        self.dsset = ds_name
         
     def __len__(self):
-        return self.l
+        return len(self.audio_labels)
 
     def __getitem__(self, idx):
-        idx = idx%self.l
         item = self.audio_labels[idx]
         rt =  dict(inputs=item.mel)
         rt.update(item.get_words_meta())

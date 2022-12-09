@@ -21,7 +21,7 @@ from IPython.display import Audio, display
 from tqdm import tqdm
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-from .bbox_utils import *
+from .segment_utils import *
 
 
 def get_name(path):
@@ -134,7 +134,7 @@ class ItemAudioLabel:
             self._word_score = word_score
 
         if audio_file is None:
-            assert isinstance(path, str) and osp.exists(path)
+            assert isinstance(path, str) and osp.exists(path), path
             audio_file = path.replace('/labels/',
                                       '/songs/').replace('.json', '.wav')
             if not osp.exists(audio_file):
@@ -304,3 +304,13 @@ class ItemAudioLabel:
             tokens=tokens,
             loss_scale=np.array(loss_scale),
         )
+def get_json_paths(txt_split):
+    """ Get path to json file from txt_split
+
+    Args:
+        txt_split: path to txt file
+
+    Returns:
+        list: list of path to json file
+    """
+    return open(txt_split).read().splitlines()

@@ -37,6 +37,36 @@ def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_t
             
             pred_i += 1
     return target
+    
+# def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_to_milisec_ratio):
+#     """
+#         pred_word_segments: predictions list 
+#                 [['Những', 0.26025, 0.4204375],
+#                  ['niềm', 0.5405625, 0.8209375],
+#                  ['đau', 1.12125, 1.2814375],...]
+#         json_path: competion format output placeholder
+#     """
+
+#     pred_i = 0
+#     target = mmcv.load(json_path)
+#     for i, line in enumerate(target):
+#         for j, word in enumerate(line['l']):
+            
+#             pred_word = pred_word_segments[pred_i]
+#             s = int(pred_word.start*word_idx_to_milisec_ratio)
+#             e = int(pred_word.end*word_idx_to_milisec_ratio)
+            
+#             if j == 0:
+#                 target[i]['s'] = s
+#             elif j == len(line['l'])-1:
+#                 target[i]['e'] = e
+                
+#             target[i]['l'][j]['s'] = s
+#             target[i]['l'][j]['e'] = e
+            
+#             pred_i += 1
+#     return target
+
 
 
 def preproc(json_path):
