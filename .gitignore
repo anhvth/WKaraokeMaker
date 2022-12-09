@@ -7,3 +7,4 @@ outputs
 
 **/*/__pycache__
 *.egg-info
+output

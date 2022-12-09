@@ -1,7 +1,6 @@
 import os
 import os.path as osp
 from glob import glob
-from typing import Tuple
 
 import cv2
 import mmcv
@@ -136,7 +135,7 @@ def torch_load_audio(audio_path, sr=16000):
     return audio.numpy()
 
 
-def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=120):
+def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     """
     Generate karaoke video from audio and lyrics
     
@@ -156,8 +155,8 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=120):
     start_time = 0  # lyrics.pop(0)['s']
     end_time = lyrics.pop(-1)["e"]
     num_frames = int((end_time - start_time) * fps)
-
-    frames = np.zeros((num_frames, 100, 1500, 3), dtype=np.uint8)
+    height, width = 720, 1280
+    frames = np.zeros((num_frames, height, width, 3), dtype=np.uint8)
 
     for i, line in enumerate(lyrics):
         start_line_frame = int((line["s"] - start_time) * fps)
@@ -167,15 +166,20 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=120):
         first_frame_line = frames[start_line_frame].copy() * 0
         # Puttext to first frame using opencv
         text_line = convert_vietnamese_text_to_english_text(text_line)
+        # Put bold text to first frame in the center
+
         cv2.putText(
             first_frame_line,
             text_line,
-            (30, 50),
+            (int(width / 5), int(height / 2)),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (255, 255, 255),
             2,
+            cv2.LINE_AA,
         )
+
+
 
         # Print text and time
         print(
@@ -194,23 +198,21 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=120):
             current_text_line = convert_vietnamese_text_to_english_text(
                 current_text_line
             )
-            # Puttext to first frame of this word  using opencv
-            # first_word_frame = frames[start_word_frame]
+            # Puttext to first frame of this word 
             middle_word_frame = frames[
                 start_word_frame + (end_word_frame - start_word_frame)// 2
             ].copy()
             cv2.putText(
                 middle_word_frame,
                 current_text_line,
-                (30, 50),
+                (int(width / 5), int(height / 2)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
                 (0, 255, 0),
                 3,
             )
-            # start_word_frame = max(last_modified_frame, start_word_frame)
+
             frames[start_word_frame:end_word_frame] = middle_word_frame
-            # last_modified_frame = end_word_frame
 
 
     # Generate video from frames using opencv
@@ -224,23 +226,38 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=120):
 
     tmp_out_video = os.path.join(tmp_out_vis, f"{audio_name}.mp4")
 
-    video = cv2.VideoWriter(tmp_out_video, fourcc, fps, (1500, 100))
+    video = cv2.VideoWriter(tmp_out_video, fourcc, fps, (width, height))
     for frame in frames:
         video.write(frame)
     video.release()
-
     # Add audio to video using ffmpeg
     # Create output_video_path dir
     os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
+
     os.system(
         f"ffmpeg -i {tmp_out_video} -i {audio_path} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 {output_video_path}"
     )
-    # os.remove(tmp_out_video)
+    os.remove(tmp_out_video)
 
+def make_mp4(json_file, audio_file, output_video_path):
+    """
+    Make mp4 from json and audio
+    """
+    if not osp.exists(audio_file):
+        audio_file = os.path.join(
+            f"./data/{output_dir_name}/songs",
+            os.path.basename(json_file).replace(".json", ".mp3"),
+        )
+    try:
+        print(json_file, audio_file)
+        generate_karaoke_video(audio_file, json_file, output_video_path)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        print("Error", json_file, audio_file)
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("path_to_output")
     args = parser.parse_args()
@@ -252,26 +269,14 @@ if __name__ == "__main__":
     os.makedirs(output_video, exist_ok=True)
     # Generate karaoke video for each json file and audio file
     
-    def make_mp4(json_file):
-        fname = os.path.basename(json_file).replace(".json", "")
-        audio_file = glob(f"./data/*/songs/{fname}.wav")[0]
 
-        if not osp.exists(audio_file):
-            audio_file = os.path.join(
-                f"./data/{output_dir_name}/songs",
-                os.path.basename(json_file).replace(".json", ".mp3"),
-            )
-        try:
-            print(json_file, audio_file)
-            output_video_path = os.path.join(
-                output_video,
-                os.path.basename(json_file).replace(".json", ".mp4"),
-            )
-            generate_karaoke_video(audio_file, json_file, output_video_path)
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-            print("Error", json_file, audio_file)
             
     for json_file in json_files:
-        make_mp4(json_file)
+        fname = os.path.basename(json_file).replace(".json", "")
+        audio_file = glob(f"./data/*/songs/{fname}.wav")[0]
+        output_video_path = os.path.join(
+            output_video,
+            os.path.basename(json_file).replace(".json", ".mp4"),
+        )
+        make_mp4(json_file, audio_file, output_video_path)
+        print('-> {}'.format(osp.abspath(output_video_path)))
