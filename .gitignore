@@ -9,3 +9,5 @@ outputs
 *.egg-info
 output
 **/__pycache__/
+
+submissions

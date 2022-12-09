@@ -65,7 +65,7 @@ class UTextWriter:
             return None
         return cv2_img
     
-def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
+def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30, fill=False):
     """
     Generate karaoke video from audio and lyrics
     
@@ -77,18 +77,23 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     lyrics = mmcv.load(lyrics_path)
 
     for line in lyrics:
+        line['s'] = line['l'][0]['s']
+        line['e'] = line['l'][-1]['e']
+        
         line["s"] = line["s"] / 1000
         line["e"] = line["e"] / 1000
         for word in line["l"]:
             word["s"] = word["s"] / 1000
             word["e"] = word["e"] / 1000
+        if fill:
+            for i in range(len(line["l"]) - 1):
+                line["l"][i]["e"] = line["l"][i + 1]["s"]
 
     start_time = 0  # lyrics.pop(0)['s']
-    end_time = lyrics.pop(-1)["e"]
+    end_time = lyrics[-1]['l'][-1]['e']
     num_frames = int((end_time - start_time) * fps)
     height, width = 200, 720
     frames = np.zeros((num_frames, height, width, 3), dtype=np.uint8)
-
     for i, line in enumerate(lyrics):
         start_line_frame = int((line["s"] - start_time) * fps)
         end_line_frame = int((line["e"] - start_time) * fps)
@@ -152,7 +157,7 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
     )
     os.remove(tmp_out_video)
 
-def make_karaoke_video(json_file, audio_file, output_video_path):
+def make_karaoke_video(json_file, audio_file, output_video_path, fill=False):
     """
     Make mp4 from json and audio
     """
@@ -163,7 +168,7 @@ def make_karaoke_video(json_file, audio_file, output_video_path):
         )
     try:
         print(json_file, audio_file)
-        generate_karaoke_video(audio_file, json_file, output_video_path)
+        generate_karaoke_video(audio_file, json_file, output_video_path, fill=fill)
     except Exception as e:
         import traceback
         print(traceback.format_exc())

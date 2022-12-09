@@ -83,9 +83,9 @@ def load_eval_model(ckpt, sot):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('ckpt', help='path to pretrained checkpoint')
     parser.add_argument('data', help='path to data directory')
     parser.add_argument('exp_name', help='give a name to make it easy to find the solution.zip file')
+    parser.add_argument('--ckpt', default='pretrained/whisper_karaoke_base_vn.pth',help='path to pretrained checkpoint')
     parser.add_argument('--no-sot', dest='sot', action='store_false', help='disable sot, by default sot is enabled')
     parser.add_argument('--max_samples', '-m', default=None, type=int, help='max number of samples to evaluate, for debugging purpose')
     args = parser.parse_args()

@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("predict_dir", help="Path to submission directory")
     parser.add_argument("song_dir", help="Path to song directory")
     parser.add_argument("output_dir", help="Path to output karaoke video directory")
+    parser.add_argument("--fill", action="store_true", help="Use filed in the middle")
     args = parser.parse_args()
 
     # output_dir_name = osp.basename(osp.normpath(args.path_to_output))
@@ -29,5 +30,6 @@ if __name__ == "__main__":
             args.output_dir,
             os.path.basename(json_file).replace(".json", ".mp4"),
         )
-        make_karaoke_video(json_file, audio_file, output_video_path)
-        print('-> {}'.format(osp.abspath(output_video_path)))
+        if not osp.exists(output_video_path):
+            make_karaoke_video(json_file, audio_file, output_video_path, args.fill)
+            print('-> {}'.format(osp.abspath(output_video_path)))
