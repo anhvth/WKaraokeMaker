@@ -8,8 +8,8 @@ This work earns first place solution (on private test) of [ZAC2022](https://chal
 Karaoke Maker is a task that predicts the lyrics and melody of the given music audio. 
 It is a task that can be used in various fields such as music production and karaoke you name it.
 ## Method
-We modified whisper model to fit our task. An extra head is added in encoder and trained with ctc loss.
-An additional head is added to the decoder to predict the word segments (start, end). We simple trained it with giou+l1 loss. The other part is the same as the original whisper model.
+We modified whisper model to fit the competition task. An extra head is added to the encoder and trained with ctc loss.
+The decoder is extended withan `word_seg_embed` head  to predict the word segments (start, end). We simply trained it with giou+l1 loss. The other part is kept the same as the original whisper model.
 Please take a look at, kmaker/model.py for more details.
 
 ## Installation
