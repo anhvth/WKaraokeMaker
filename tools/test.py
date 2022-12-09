@@ -92,7 +92,7 @@ if __name__ == '__main__':
     json_paths = glob(args.data+'/labels/*.json')
     # ds = AudioDataset([ItemAudioLabel(json_path)  for json_path in json_paths])
 
-    collate_fn = collate_fn_v2 if args.sot else collate_fn_v1
+    collate_fn = collate_fn_with_sot if args.sot else collate_fn_without_sot
     all_predicted_time = []
     all_result = []
     if args.max_samples is not None:

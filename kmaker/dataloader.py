@@ -1,4 +1,5 @@
 from kmaker.data import *
+# Data utils
 
 def stack_input(inputs, target_shape=[80, 3000]):
     batch_shape = [len(inputs), *target_shape]
@@ -26,7 +27,7 @@ def stack_1d(tensors, pad_val=-100):
     return z
     
 
-def get_data(pkl, ds_set):
+def get_data(pkl, ds_set_name):
     training_data = mmcv.load(pkl)
     valid_trainval = training_data[training_data.is_valid_word_ts]
     valid_trainval = valid_trainval.sample(frac=1, random_state=0)
@@ -34,7 +35,7 @@ def get_data(pkl, ds_set):
     n_train = int(0.85*len(valid_trainval))
     train_df = valid_trainval[:n_train]
     val_df = valid_trainval[n_train:]
-    return train_df if ds_set == 'train' else val_df
+    return train_df if ds_set_name == 'train' else val_df
 
 
 
@@ -82,7 +83,7 @@ def mask_out(item):
     return item
 
 
-def collate_fn_v1(items, is_training):
+def collate_fn_without_sot(items, is_training):
     if is_training:
         items = [pad_left(item) for item in items]
         items = [mask_out(item) for item in items] # mask out words with music token
@@ -118,7 +119,7 @@ def collate_fn_v1(items, is_training):
 
 
 
-def collate_fn_v2(items, is_training):
+def collate_fn_with_sot(items, is_training):
     if is_training:
         items = [pad_left(item) for item in items]
         items = [mask_out(item) for item in items] # mask out words with music token

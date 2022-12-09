@@ -1,5 +1,6 @@
 from ple.all import *
 
+
 class CustomModelTrainer(LitModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -16,13 +17,11 @@ class CustomModelTrainer(LitModel):
         
         return [optimizer], [scheduler]
     
+    
     def forward(self, batch):
-        out, hs, dec_ids, ehs = self.model(batch['inputs'], labels=batch['labels'])
-        outputs_coord = self.bbox_embed(hs[batch['dec_pos']]).sigmoid()
-        return out, outputs_coord, self.lm_head(ehs)
-    
-    
-    def forward_loss(self, batch):
+        """
+            Forward pass, caculate loss
+        """
         outputs = self.model.forward_both(
             batch['inputs'],
             labels=batch['labels'],
@@ -36,25 +35,25 @@ class CustomModelTrainer(LitModel):
         
         loss_dec = outputs['dec_loss'].mean()
         loss_ctc = outputs['enc_loss']
-        #--loss for backward pass
+        
         loss_total = loss_l1+loss_giou+loss_dec+loss_ctc
         return dict(
             loss_l1=loss_l1,
             loss_giou=loss_giou,
             loss_dec=loss_dec,
-            loss_total=loss_total,
             loss_ctc=loss_ctc,
+            loss_total=loss_total,# Used for backprop
         )
     
     def training_step(self, batch, idx):
-        out = self.forward_loss(batch)
+        out = self(batch)
         for k, v in out.items():
             if k.startswith('loss'):
                 self.log(f'train/{k}', v, prog_bar=True, on_epoch=True, on_step=True, sync_dist=True)
         return out['loss_total']
 
     def validation_step(self, batch, idx):
-        out = self.forward_loss(batch)
+        out = self(batch)
         for k, v in out.items():
             if 'loss' in k:
                 self.log(f'val/{k}', v, prog_bar=True, on_epoch=True, on_step=False, sync_dist=True)
