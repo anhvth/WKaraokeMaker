@@ -1,15 +1,17 @@
 # WKaraokeMaker
-This is a project to generate karaoke videos from a song and a voice recording. It is based on the [Whisper](https://github.com/openai/whisper.git) project.
+## Description
+
+This work earns first place solution of [ZAC2022-LyricAlignment Track](https://challenge.zalo.ai/portal/lyric-alignment/final-leaderboard) 
+
+## What is Karaoke Maker?
+
+Karaoke Maker is a task that predicts the lyrics and melody of the given music audio. 
+It is a task that can be used in various fields such as music production and karaoke you name it.
 
 ## Installation
-### Requirements
-* ffmpeg
-* python 3.8
-* pytorch
-* [whisper](https://git)
-* [pytorch-lightning](https://pytorch-lightning.readthedocs.io/en/latest/new-project.html)
-* [captum](https://captum.ai/)
-* [pydub](
+* ffmpeg # for audio/video processing
+* python >= 3.8
+* pytorch torchaudio
 
 ```bash
     conda create -n kmaker python 3.8
