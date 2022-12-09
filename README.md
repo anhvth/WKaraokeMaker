@@ -28,3 +28,8 @@ It is a task that can be used in various fields such as music production and kar
 
 ## Colab Demo
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duonglh-1955/WKaraokeMaker/blob/main/demo.ipynb)
+
+
+## Limitation
+* The current model only trained on Vietnamese dataset
+* Length of the audio must be less than 30s
