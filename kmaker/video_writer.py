@@ -15,7 +15,7 @@ import torchaudio
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-FONT = '/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf'
+FONT = 'assert/FreeMonoBold.ttf'
 assert osp.exists(FONT), f'Font {FONT} does not exist'
 def torch_load_audio(audio_path, sr=16000):
     """
