@@ -24,3 +24,7 @@ It is a task that can be used in various fields such as music production and kar
 
 ## Example karaoke video
 [![Watch the video](./asset/demo.png)](https://youtu.be/16RjtOygs7o)
+
+
+## Colab Demo
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duonglh-1955/WKaraokeMaker/blob/main/demo.ipynb)
