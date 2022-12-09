@@ -39,7 +39,7 @@ def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_t
     return target
 
 
-def preproc(json_path, collate_fn):
+def preproc(json_path, collate_fn, device='cuda'):
     """ Preprocess json file
 
     Args:
@@ -56,10 +56,9 @@ def preproc(json_path, collate_fn):
     
     batch = collate_fn([rt], False)
     
-    with torch.inference_mode():
+    if device=='cuda':
         for k, v in batch.items():
             batch[k] = v.cuda() if hasattr(v, 'cuda') else v
-
     return item, batch
 
 def load_eval_model(ckpt, sot):

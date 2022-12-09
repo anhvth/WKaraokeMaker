@@ -188,7 +188,6 @@ def modify_whisper(model, sot):
         head_mask=None,
         decoder_head_mask=None,
         cross_attn_head_mask=None,
-        encoder_outputs=None,
         past_key_values=None,
         decoder_inputs_embeds=None,
         labels=None,
@@ -211,7 +210,7 @@ def modify_whisper(model, sot):
         outputs = self.model.forward_with_ctc(
             input_features,
             decoder_input_ids=decoder_input_ids,
-            encoder_outputs=encoder_outputs,
+            
             decoder_attention_mask=decoder_attention_mask,
             head_mask=head_mask,
             decoder_head_mask=decoder_head_mask,
