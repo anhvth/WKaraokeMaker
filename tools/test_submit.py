@@ -67,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('ckpt', help='path to pretrained checkpoint')
     parser.add_argument('data', help='path to data directory')
     parser.add_argument('exp_name', help='give a name to make it easy to find the solution.zip file')
-    parser.add_argument('--sot', action='store_true', help='if set, use start of sentence token in decoder as in default whisper model')
+    parser.add_argument('--no-sot', dest='sot', action='store_false', help='disable sot, by default sot is enabled')
     parser.add_argument('--max_samples', '-m', default=None, type=int, help='max number of samples to evaluate, for debugging purpose')
     args = parser.parse_args()
     

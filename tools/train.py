@@ -51,14 +51,12 @@ if __name__ == '__main__':
     
     collate_fn = collate_fn_with_sot if args.sot else collate_fn_without_sot
     
-    collate_fn_val = lambda x:collate_fn(x, is_training=False)
-    collate_fn_train = lambda x:collate_fn(x, is_training=True)
     dl_val = torch.utils.data.DataLoader(val_ds, args.batch_size, num_workers=args.num_workers, 
-                                        shuffle=False, collate_fn=collate_fn_val)
+                                        shuffle=False, collate_fn=lambda x:collate_fn(x, is_training=False))
 
     train_ds = AudioDataset(train_json_paths, 'train')
     dl_train = torch.utils.data.DataLoader(train_ds, args.batch_size, num_workers=args.num_workers, 
-                                        shuffle=True, collate_fn=collate_fn_train)
+                                        shuffle=True, collate_fn=lambda x:collate_fn(x, is_training=True))
     
     print(f'{len(dl_train)=} | {len(dl_val)=}')
 
@@ -72,6 +70,7 @@ if __name__ == '__main__':
     )
     # --- Optimizer
     optim = lambda params:torch.optim.Adam(params, lr=args.lr)
+    # TODO: Try WAdam
 
     model = get_whisper('base')
     modified_model = modify_whisper(model, args.sot)
