@@ -39,7 +39,7 @@ def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_t
     return target
 
 
-def preproc(json_path):
+def preproc(json_path, collate_fn):
     """ Preprocess json file
 
     Args:
@@ -53,6 +53,7 @@ def preproc(json_path):
     rt['w2v_tokens'] = item.w2v_tokens
     rt['idx'] = None
     rt['transcript'] = item.transcript
+    
     batch = collate_fn([rt], False)
     
     with torch.inference_mode():
@@ -61,7 +62,26 @@ def preproc(json_path):
 
     return item, batch
 
+def load_eval_model(ckpt, sot):
+    """ Load model from checkpoint
 
+    Args:
+        ckpt (str): path to checkpoint
+    """
+    # Load model    
+    st = torch.load(ckpt)
+    if 'state_dict' in st:
+        st = st['state_dict']
+    
+    model = get_whisper('base')
+    modified_model = modify_whisper(model, sot)
+
+    new_st = {k[6:]:v for k, v in st.items()}
+    modified_model.load_state_dict(new_st)
+    eval_model = modified_model.cuda().requires_grad_(False).eval()
+    
+    return  eval_model
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('ckpt', help='path to pretrained checkpoint')
@@ -71,36 +91,23 @@ if __name__ == '__main__':
     parser.add_argument('--max_samples', '-m', default=None, type=int, help='max number of samples to evaluate, for debugging purpose')
     args = parser.parse_args()
     
-    # Load model    
-    st = torch.load(args.ckpt)
-    if 'state_dict' in st:
-        st = st['state_dict']
         
-    model = get_whisper('base')
-    modified_model = modify_whisper(model, args.sot)
-
-    # model = get_whisper('base')
-    # modified_model = modify_whisper(model)
-    new_st = {k[6:]:v for k, v in st.items()}
-    modified_model.load_state_dict(new_st)
-    eval_model = modified_model.cuda().requires_grad_(False).eval()
+    eval_model = load_eval_model(args.ckpt, args.sot)
     
     
     # Query data
     json_paths = glob(args.data+'/labels/*.json')
     # ds = AudioDataset([ItemAudioLabel(json_path)  for json_path in json_paths])
 
-    collate_fn = collate_fn_with_sot if args.sot else collate_fn_without_sot
+    
     all_predicted_time = []
     all_result = []
     if args.max_samples is not None:
         json_paths = json_paths[0::len(json_paths)//args.max_samples]
 
     for i, path in tqdm(enumerate(json_paths)):
-        t1 = time()
-        item, batch = preproc(path)
+        item, batch = preproc(path, collate_fn = collate_fn_with_sot if args.sot else collate_fn_without_sot)
         with torch.inference_mode():
-
             outputs = eval_model.forward_both(
                         batch['inputs'],
                         labels=batch['labels'],
@@ -118,13 +125,8 @@ if __name__ == '__main__':
             results.append((word, x1, x2))
         results = [Segment(*result, 1) for result in results]
         results = convert_result_to_competion_format(results, path, 1000)
-        t2 = time()
-        
         all_result.append(results)
-        predicted_time = int(t2*1000 - t1*1000)
         
-        all_predicted_time.append((item.name, predicted_time))
-        print(f'{i} {item.name} {predicted_time}ms')
     
     names = [get_name(path) for path in json_paths]
     

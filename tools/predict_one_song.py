@@ -7,9 +7,13 @@ import mmcv
 import numpy as np
 import torch
 import torchaudio
+from kmaker.dataloader import *
 # from moviepy.editor import AudioFileClip, VideoFileClip
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
+
+from tools.test_submit import (Segment, convert_result_to_competion_format,
+                               load_eval_model, preproc)
 
 FONT = '/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf'
 assert osp.exists(FONT), f'Font {FONT} does not exist'
@@ -121,23 +125,13 @@ def generate_karaoke_video(audio_path, lyrics_path, output_video_path, fps=30):
             current_text_line = " ".join(
                 [word["d"] for word in line["l"][: j + 1]]
             )
-            # current_text_line = convert_vietnamese_text_to_english_text(
-            #     current_text_line
-            # )
+
             # Puttext to first frame of this word 
             middle_word_frame = frames[
                 start_word_frame + (end_word_frame - start_word_frame)// 2
             ].copy()
             middle_word_frame = utf8_text_writer_green(middle_word_frame, current_text_line, (int(width / 5), int(height / 2)), text_rgb_color=(0, 255, 0), text_size=1)
-            # cv2.putText(
-            #     middle_word_frame,
-            #     current_text_line,
-            #     (int(width / 5), int(height / 2)),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0),
-            #     3,
-            # )
+
 
             frames[start_word_frame:end_word_frame] = middle_word_frame
 
@@ -194,25 +188,44 @@ def get_audio_file(json_file, data_dir="data"):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("path_to_output")
+    # parser.add_argument("path_to_output")
+    parser.add_argument('sample_json')
+    parser.add_argument('--no-sot', dest='sot', action='store_false')
     args = parser.parse_args()
 
-    output_dir_name = osp.basename(osp.normpath(args.path_to_output))
-    json_files = glob(f"./outputs/{output_dir_name}/submission/*.json")
-    output_video = f"./outputs/video/{output_dir_name}/"
-    os.system(f'rm -r {output_video}')
-    os.makedirs(output_video, exist_ok=True)
     
-    # Generate karaoke video for each json file and audio file
+    # for json_file in json_files:
+    json_file = args.sample_json
     
+    eval_model = load_eval_model('lightning_logs/base_detection_no_ckpt_1k/08/ckpts/epoch=116_val_loss_giou=0.0000.ckpt', sot=True)
+    collate_fn = collate_fn_with_sot if args.sot else collate_fn_without_sot
+    item, batch = preproc(json_file, collate_fn)
+    with torch.inference_mode():
+        outputs = eval_model.forward_both(
+                    batch['inputs'],
+                    labels=batch['labels'],
+                    ctc_labels=batch['w2v_labels'],
+                )
+        bboxes = outputs['bbox_pred'][batch['dec_pos']]
+    # import box_cxcywh_to_xyxy
+    from kmaker.segment_utils import box_cxcywh_to_xyxy
 
-            
-    for json_file in json_files:
-        fname = os.path.basename(json_file).replace(".json", "")
-        audio_file = get_audio_file(json_file)
-        output_video_path = os.path.join(
-            output_video,
-            os.path.basename(json_file).replace(".json", ".mp4"),
-        )
-        make_mp4(json_file, audio_file, output_video_path)
-        print('-> {}'.format(osp.abspath(output_video_path)))
+    xyxy = box_cxcywh_to_xyxy(bboxes)[:,[0,2]]
+    words = [_[0] for _ in item.words]
+    
+    results = []
+    xyxy = xyxy.clip(0, 1)
+    for (x1,x2), word in zip((xyxy*30).tolist(), words):
+        results.append((word, x1, x2))
+    results = [Segment(*result, 1) for result in results]
+    results = convert_result_to_competion_format(results, json_file, 1000)    
+    
+    fname = os.path.basename(json_file).replace(".json", "")
+    audio_file = get_audio_file(json_file)
+    output_video = '/tmp/karaoke'
+    output_video_path = os.path.join(
+        output_video,
+        os.path.basename(json_file).replace(".json", ".mp4"),
+    )
+    make_mp4(json_file, audio_file, output_video_path)
+    print('-> {}'.format(osp.abspath(output_video_path)))

@@ -9,7 +9,7 @@ from transformers import (AutoModelForSpeechSeq2Seq, AutoProcessor,
 
 from kmaker.data import wtokenizer
 
-from .segment_utils import *
+# from .segment_utils import *
 
 
 def get_whisper(model_name):

@@ -3,8 +3,8 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--train_txt')
-parser.add_argument('--val_txt')
+parser.add_argument('--train_txt', required=True)
+parser.add_argument('--val_txt', required=True)
 parser.add_argument('--ctc_loss_scale', '-c', default=0, type=float)
 parser.add_argument('--epochs', '-e', default=125, type=int)
 parser.add_argument('--batch_size', '-b', default=10, type=int)
