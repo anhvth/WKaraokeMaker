@@ -256,6 +256,14 @@ def make_mp4(json_file, audio_file, output_video_path):
         print(traceback.format_exc())
         print("Error", json_file, audio_file)
 
+def get_audio_file(json_file, data_dir="data"):
+    """
+        From json file, get audio file
+    """
+    fname = os.path.basename(json_file).replace(".json", "")
+    return glob(f"{data_dir}/*/songs/{fname}.*")[0]
+    
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -267,13 +275,14 @@ if __name__ == "__main__":
     output_video = f"./outputs/video/{output_dir_name}/"
     os.system(f'rm -r {output_video}')
     os.makedirs(output_video, exist_ok=True)
+    
     # Generate karaoke video for each json file and audio file
     
 
             
     for json_file in json_files:
         fname = os.path.basename(json_file).replace(".json", "")
-        audio_file = glob(f"./data/*/songs/{fname}.wav")[0]
+        audio_file = get_audio_file(json_file)
         output_video_path = os.path.join(
             output_video,
             os.path.basename(json_file).replace(".json", ".mp4"),

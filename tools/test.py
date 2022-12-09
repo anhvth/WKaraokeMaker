@@ -1,21 +1,23 @@
 import argparse
-
+from time import time
 
 import torch
 
 from kmaker.dataloader import *
 from kmaker.model import *
-from time import time
+
 
 def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_to_milisec_ratio):
-    """
-        pred_word_segments: predictions list 
-                [['Những', 0.26025, 0.4204375],
-                ['niềm', 0.5405625, 0.8209375],
-                ['đau', 1.12125, 1.2814375],...]
-        json_path: competion format output placeholder
-    """
+    """_summary_
 
+    Args:
+        pred_word_segments (_type_): list of Segment
+        json_path (_type_): path to json file
+        word_idx_to_milisec_ratio (_type_): convert word index to milisecond ratio
+
+    Returns:
+        _type_: dictionaly of result in competition format
+    """
     pred_i = 0
     target = mmcv.load(json_path)
     for i, line in enumerate(target):
@@ -38,11 +40,17 @@ def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_t
 
 
 def preproc(path):
+    """_summary_
+
+    Args:
+        path (str): path to json file
+    Returns:
+        tuple: (item, batch)
+    """
     item = ItemAudioLabel(path, spliter='|', is_training=False) 
     rt =  dict(inputs=item.mel)
     rt.update(item.get_words_meta())
     rt['w2v_tokens'] = item.w2v_tokens
-    # assert max(rt['w2v_tokens'])<110, rt['w2v_tokens']
     rt['idx'] = None
     rt['transcript'] = item.transcript
     audio = item.audio
@@ -58,19 +66,19 @@ def preproc(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('ckpt')
-    parser.add_argument('data')
-    parser.add_argument('exp_name')
-    parser.add_argument('--sot', action='store_true')
-    parser.add_argument('--max_samples', '-m', default=None, type=int)
+    parser.add_argument('ckpt', help='path to pretrained checkpoint')
+    parser.add_argument('data', help='path to data directory')
+    parser.add_argument('exp_name', help='give a name to make it easy to find the solution.zip file')
+    parser.add_argument('--sot', action='store_true', help='if set, use start of sentence token in decoder as in default whisper model')
+    parser.add_argument('--max_samples', '-m', default=None, type=int, help='max number of samples to evaluate, for debugging purpose')
     args = parser.parse_args()
+    
+    
+    # Load model    
     st = torch.load(args.ckpt)
     if 'state_dict' in st:
         st = st['state_dict']
         
-    collate_fn = collate_fn_v2 if args.sot else collate_fn_v1
-    json_paths = glob(args.data+'/labels/*.json')
-    # ds = AudioDataset([ItemAudioLabel(json_path)  for json_path in json_paths])
     model = get_whisper('base')
     modified_model = modify_whisper(model, args.sot)
 
@@ -79,9 +87,13 @@ if __name__ == '__main__':
     new_st = {k[6:]:v for k, v in st.items()}
     modified_model.load_state_dict(new_st)
     eval_model = modified_model.cuda().requires_grad_(False).eval()
+    
+    
+    # Query data
+    json_paths = glob(args.data+'/labels/*.json')
+    # ds = AudioDataset([ItemAudioLabel(json_path)  for json_path in json_paths])
 
-        
-
+    collate_fn = collate_fn_v2 if args.sot else collate_fn_v1
     all_predicted_time = []
     all_result = []
     if args.max_samples is not None:

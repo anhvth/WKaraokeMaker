@@ -1,15 +1,25 @@
-from transformers import AutoProcessor, WhisperTokenizer, AutoModelForSpeechSeq2Seq
-import whisper
-import torch, torch.nn as nn
-from ple.all import *
-from kmaker.data import wtokenizer
-from fastcore.all import patch
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
+import whisper
+from fastcore.all import patch
+from ple.all import *
+from transformers import (AutoModelForSpeechSeq2Seq, AutoProcessor,
+                          WhisperTokenizer)
+
+from kmaker.data import wtokenizer
+
 from .bbox_utils import *
+
+
 def get_whisper(model_name):
+    """Get the pretrained whisper model"""
     return AutoModelForSpeechSeq2Seq.from_pretrained(f"openai/whisper-{model_name}", 
                                                   cache_dir='pretrained/transformers', use_cache=False, 
                                                   local_files_only=False)
+
+    
+
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -85,6 +95,7 @@ def forward_w2v(
 
 
 def modify_whisper(model, sot):
+    """Modify the whisper model to add ctc loss (encoder), and bbox embedding(decoder)"""
     model.model.ctc_lm_head =  nn.Sequential(
         nn.LayerNorm(512),
         MLP(512, 512, 110, 3),
@@ -109,7 +120,8 @@ def modify_whisper(model, sot):
     # model.model.decoder.layers[-1].requires_grad_(True)
 
     
-    from transformers.models.whisper.modeling_whisper import shift_tokens_right, CrossEntropyLoss
+    from transformers.models.whisper.modeling_whisper import (
+        CrossEntropyLoss, shift_tokens_right)
     
     @patch
     def forward_with_ctc(
@@ -242,7 +254,7 @@ def modify_whisper(model, sot):
         )
     return model
 
-def calulcate_bbox_loss(src_boxes, target_boxes, loss_scale=None):#, num_boxes):
+def calulcate_bbox_loss(src_boxes, target_boxes):
     
     src_boxes_xyxy = box_cxcywh_to_xyxy(src_boxes)
     target_boxes_xyxy = box_cxcywh_to_xyxy(target_boxes)
@@ -256,7 +268,7 @@ def calulcate_bbox_loss(src_boxes, target_boxes, loss_scale=None):#, num_boxes):
     loss_giou = 1 - torch.diag(generalized_box_iou(
         src_boxes_xyxy,
         target_boxes_xyxy), )
-    losses['loss_giou'] = loss_giou#.sum() / num_boxes
+    losses['loss_giou'] = loss_giou
     return losses
 
 
