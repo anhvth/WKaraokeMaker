@@ -1,7 +1,7 @@
 # WKaraokeMaker
 ## Description
 
-This work earns first place solution of [ZAC2022](https://challenge.zalo.ai/portal/lyric-alignment/final-leaderboard), LyricAlignment Track.
+This work earns first place solution (on private test) of [ZAC2022](https://challenge.zalo.ai/portal/lyric-alignment/final-leaderboard), LyricAlignment Track.
 
 ## What is Karaoke Maker?
 
