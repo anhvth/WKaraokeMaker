@@ -90,12 +90,25 @@ def display_segment_with_time(waveform, start, end, sample_rate=16000):
     play_audio(segment, sample_rate=sample_rate)
 
 
-# @imemoize
+
+def load_auto_as_numpy(audio_path):
+    "Load audio not using torchaudio"
+    import soundfile as sf
+    _audio, _sample_rate = sf.read(audio_path)
+    if _audio.ndim == 2:
+        _audio = _audio.mean(axis=1)
+    return _audio, _sample_rate
+    
+
 def load_audio(path):
     import torchaudio.functional as FA
-    _audio, _sample_rate = torchaudio.load(path)
+    try:
+        _audio, _sample_rate = torchaudio.load(path)
+    except:
+        _audio, _sample_rate = load_auto_as_numpy(path)
     _audio = FA.resample(_audio, _sample_rate, 16000)
     return _audio[0].numpy()
+    
 
 
 class ItemAudioLabel:
