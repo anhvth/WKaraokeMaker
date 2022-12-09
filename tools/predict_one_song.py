@@ -38,6 +38,7 @@ if __name__ == "__main__":
     # parser.add_argument("path_to_output")
     parser.add_argument('sample_json')
     parser.add_argument('--audio_file', default=None)
+    parser.add_argument('--output_file', default=None)
     parser.add_argument('--no-sot', dest='sot', action='store_false')
     args = parser.parse_args()
 
@@ -58,10 +59,13 @@ if __name__ == "__main__":
     
     results = predictor.predict(json_file)
     mmcv.dump(results, pred_path)
-    output_video_path = os.path.join(
-        output_video,
-        os.path.basename(json_file).replace(".json", ".mp4"),
-    )
+    if args.output_file is not None:
+        output_video_path = args.output_file
+    else:
+        output_video_path = os.path.join(
+            output_video,
+            os.path.basename(json_file).replace(".json", ".mp4"),
+        )
     
     make_karaoke_video(pred_path, audio_file, output_video_path)
     print('-> {}'.format(osp.abspath(output_video_path)))

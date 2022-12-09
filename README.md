@@ -20,7 +20,10 @@ It is a task that can be used in various fields such as music production and kar
     pip install -r requirements
     pip install -e ./
 ```
-
+## Usage
+```bash
+    python tools/predict_one_song.py asset/12300.json --audio_file asset/12300.mp3 --output_file output/12300.mp4
+```
 
 ## Example karaoke video
 [![Watch the video](./asset/demo.png)](https://youtu.be/16RjtOygs7o)
