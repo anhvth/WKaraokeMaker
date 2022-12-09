@@ -20,3 +20,9 @@ It is a task that can be used in various fields such as music production and kar
     pip install -r requirements
     pip install -e ./
 ```
+
+
+## Example karaok video
+```
+    ./asset/demo.mp4m
+```
