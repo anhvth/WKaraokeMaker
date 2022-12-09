@@ -73,7 +73,6 @@ if __name__ == '__main__':
     parser.add_argument('--max_samples', '-m', default=None, type=int, help='max number of samples to evaluate, for debugging purpose')
     args = parser.parse_args()
     
-    
     # Load model    
     st = torch.load(args.ckpt)
     if 'state_dict' in st:
@@ -112,7 +111,6 @@ if __name__ == '__main__':
             bboxes = outputs['bbox_pred'][batch['dec_pos']]
 
         
-        
         xyxy = box_cxcywh_to_xyxy(bboxes)[:,[0,2]]
         words = [_[0] for _ in item.words]
         
@@ -128,21 +126,19 @@ if __name__ == '__main__':
         predicted_time = int(t2*1000 - t1*1000)
         
         all_predicted_time.append((item.name, predicted_time))
-
-
+        print(f'{i} {item.name} {predicted_time}ms')
+    
     names = [get_name(path) for path in json_paths]
+    
     if 'public' in args.data:
         test_set = 'public'
     elif 'private' in args.data:
         test_set = 'private'
     else:
         test_set = 'training'
-        
 
     for results, name in zip(all_result, names):
         mmcv.dump(results, f'outputs/{test_set}_{args.exp_name}/submission/{name}.json')
 
     os.system(f'cd outputs/{test_set}_{args.exp_name} && zip -r {test_set}_{args.exp_name}.zip submission')
     print('Output: {}'.format(osp.abspath(f'outputs/{test_set}_{args.exp_name}.zip')))
-
-

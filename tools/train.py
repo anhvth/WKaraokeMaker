@@ -16,7 +16,6 @@ OVERFIT_BATCHES = 0.0
 CKPT_PRETRAIN = None
 EXP_NAME = 'base_detection_no_ckpt_1k'
 
-
 if DEBUG:
     print("DEBUG=1")
     GPUS=1
@@ -26,9 +25,9 @@ if DEBUG:
     BZ=2
     NUM_WORKERS = 0
     EXP_NAME += '/debug'
-import os
 
 #=======================================================================================================
+import os
 from kmaker.data import *
 from kmaker.dataloader import *
 from kmaker.model import *
