@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # parser.add_argument("path_to_output")
     parser.add_argument('sample_json')
+    parser.add_argument('--audio_file', default=None)
     parser.add_argument('--no-sot', dest='sot', action='store_false')
     args = parser.parse_args()
 
@@ -47,7 +48,10 @@ if __name__ == "__main__":
 
     
     fname = os.path.basename(json_file).replace(".json", "")
-    audio_file = get_audio_file(json_file)
+    if args.audio_file is not None:
+        audio_file = args.audio_file
+    else:
+        audio_file = get_audio_file(json_file)
     
     output_video = '/tmp/karaoke'
     pred_path = os.path.join(output_video, fname + '.json')
