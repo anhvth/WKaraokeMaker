@@ -3,3 +3,4 @@ avcv==0.0.49
 fast_ple
 lazy_module
 moviepy
+# pytorch, torchaudio, torchvision, and torchaudio should be installed together
