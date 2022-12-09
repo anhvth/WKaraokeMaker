@@ -30,15 +30,6 @@ if __name__ == "__main__":
     st.write("Please note that the lyrics text should be in Vietnamese")
     st.write("The output video will be generated in the output folder")
 
-    # Upload audio file
-    # audio_file = st.file_uploader("Upload Audio", type=["wav"])
-    # if audio_file is not None:
-    #     # Save audio to data folder
-    #     audio_path = os.path.join("data", "audio.wav")
-    #     with open(audio_path, "wb") as f:
-    #         f.write(audio_file.getbuffer())
-    # Upload lyrics file
-
     lyrics_file = st.file_uploader("Upload Lyrics", type=["json"])
     if lyrics_file is not None:
         # Save lyrics to data folder
