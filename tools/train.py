@@ -1,4 +1,5 @@
-#=========================HYPERPARAMETER
+#=========================Config
+
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -21,7 +22,7 @@ parser.add_argument('--resume', action='store_true', help='resume training from 
 
 
 args = parser.parse_args()
-if args.debug:
+if args.debug: # debug mode
     print("DEBUG=1")
     args.gpus=1
     args.overfit_batches=2
@@ -33,7 +34,7 @@ if args.debug:
 
 
 
-#=======================================================================================================
+#====================== IMPORTS
 from kmaker.data import *
 from kmaker.dataloader import *
 from kmaker.model import *
@@ -41,6 +42,7 @@ from kmaker.trainer import CustomModelTrainer
 from ple.all import *
 
 if __name__ == '__main__':
+    # Boilerplate training code..............
     train_json_paths = get_json_paths(args.train_txt)
     val_json_paths = get_json_paths(args.val_txt)
 
