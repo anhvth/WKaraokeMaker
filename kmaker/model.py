@@ -55,41 +55,41 @@ def cal_ctc(logits, labels):
         )
     return loss
 
-def forward_w2v(
-    lm_head,
-    input_values,
-    attention_mask=None,
-    output_attentions=None,
-    output_hidden_states=None,
-    return_dict= None,
-    labels= None,
-    ):
+# def forward_w2v(
+#     lm_head,
+#     input_values,
+#     attention_mask=None,
+#     output_attentions=None,
+#     output_hidden_states=None,
+#     return_dict= None,
+#     labels= None,
+#     ):
     
 
-    logits = lm_head(input_values)
-    loss = None
-    if labels is not None:
-        input_lengths = torch.tensor([1500]*len(logits))
+#     logits = lm_head(input_values)
+#     loss = None
+#     if labels is not None:
+#         input_lengths = torch.tensor([1500]*len(logits))
 
-        labels_mask = labels >= 0
-        target_lengths = labels_mask.sum(-1)
-        flattened_targets = labels.masked_select(labels_mask)
-        # DB()
-        log_probs = nn.functional.log_softmax(logits, dim=-1, dtype=torch.float32).transpose(0, 1)
-        with torch.backends.cudnn.flags(enabled=False):
-            loss = nn.functional.ctc_loss(
-                log_probs,
-                flattened_targets,
-                input_lengths,
-                target_lengths,
-                blank=109, #w2vmeta['w2vmodel'].config.pad_token_id
-                reduction='mean',
-                zero_infinity=False,
-            )
-    return dict(
-        logits=logits,
-        loss=loss,
-    )
+#         labels_mask = labels >= 0
+#         target_lengths = labels_mask.sum(-1)
+#         flattened_targets = labels.masked_select(labels_mask)
+#         # DB()
+#         log_probs = nn.functional.log_softmax(logits, dim=-1, dtype=torch.float32).transpose(0, 1)
+#         with torch.backends.cudnn.flags(enabled=False):
+#             loss = nn.functional.ctc_loss(
+#                 log_probs,
+#                 flattened_targets,
+#                 input_lengths,
+#                 target_lengths,
+#                 blank=109, #w2vmeta['w2vmodel'].config.pad_token_id
+#                 reduction='mean',
+#                 zero_infinity=False,
+#             )
+#     return dict(
+#         logits=logits,
+#         loss=loss,
+#     )
 
 
 
@@ -236,6 +236,7 @@ def modify_whisper(model, sot):
         lm_logits = self.proj_out(outputs['dec_last_hidden_state'])
         bbox_pred = self.bbox_embed(outputs['dec_last_hidden_state']).sigmoid()
         loss = None
+        dec_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss(reduction='none')
 
@@ -244,7 +245,7 @@ def modify_whisper(model, sot):
         enc_loss = None
         if ctc_labels is not None:
             enc_loss = cal_ctc(enc_logits, ctc_labels)
-        segment_loss = None
+        
         return dict(
             enc_logits = enc_logits,
             enc_loss = enc_loss,
