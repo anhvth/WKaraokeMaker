@@ -27,7 +27,7 @@ It is a task that can be used in various fields such as music production and kar
 
 
 ## Colab Demo
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/duonglh-1955/WKaraokeMaker/blob/main/demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1lDnOOu1sVjz47yIkyDrmZiBDG0ydrSMx#scrollTo=mcOq0HfMxA87)
 
 
 ## Limitation
