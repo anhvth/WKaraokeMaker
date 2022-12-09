@@ -115,15 +115,15 @@ def load_audio(path):
 
 class ItemAudioLabel:
     """
-    Item for audio label, it can be used for wrapping audio and label in dataset or visualization purpose
+    Pair audio and label, use for training/data augmentation/ sanity check/ statistic .....
+    
     """
     def __init__(self,
                  path,
-                 audio_file=None,
-                 load_mel=True,
+                 audio_file=None, # Assume audio file in the corresonding "songs" directory with mp3 or wav extension
                  model_type='detection',
                  word_score=None,
-                 spliter=' ',
+                 spliter=' ', # Use for split label into words in w2v forced alignment
                  is_training=True):
         self.path = path
         self.model_type = model_type
@@ -177,10 +177,18 @@ class ItemAudioLabel:
 
     @property
     def transcript(self):
+        """
+            Join all words in transcript into a string
+        """
         return self.spliter.join([_[0] for _ in self.words])
 
     @property
     def word_score(self):
+        """ W2v score of each word in transcript
+
+        Returns:
+            List[float]: score of each word
+        """
         if not hasattr(self, '_word_score'):
             self.giou
             self._word_score = [
@@ -190,6 +198,11 @@ class ItemAudioLabel:
 
     def get_words_meta(self):
         text, start, end = list(zip(*self.words))
+        # Example 
+        # text:('Xin', 'có', 'một', 'lần', 'uống', 'chén', 'muộn', 'phiền', 'Nhà', 'im', 'đứng', 'cửa', 'cài', 'đóng', 'then', 'Vườn', 'mưa', 'xuống', 'hành', 'lang', 'tối', 'tăm', 'Về', 'thôi', 'nhé,', 'cổng', 'chào', 'cuối', 'sân')
+        # start:(0.0, 0.421, 1.011, 1.36, 2.821, 3.561, 3.941, 4.631, 8.75, 9.411, 9.79, 10.98, 11.72, 12.0, 12.371, 14.5, 15.04, 15.49, 16.591, 17.35, 17.661, 18.161, 20.14, 20.47, 20.81, 22.18, 22.82, 23.13, 23.55)
+        # end: (0.421, 1.011, 1.36, 1.571, 3.071, 3.941, 4.571, 4.731, 9.381, 9.73, 10.94, 11.72, 12.0, 12.301, 13.29, 15.04, 15.19, 16.171, 17.131, 17.651, 18.151, 18.361, 20.47, 20.81, 22.13, 22.74, 23.13, 23.55, 23.94)
+        import ipdb; ipdb.set_trace()
         if self.is_training:
             ret = self.encode_for_detection(text,
                                        start,
@@ -268,12 +281,24 @@ class ItemAudioLabel:
                             word_scores=None,
                             gious=None,
                             mode_token=False):
-        
+        """ Custom input for detection
+
+        Args:
+            texts (str): Raw input text
+            starts (_type_): _description_
+            ends (_type_): _description_
+            word_scores (_type_, optional): _description_. Defaults to None.
+            gious (_type_, optional): _description_. Defaults to None.
+            mode_token (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
         tokens = []
         decode_position = []
         bboxes = []
         loss_scale = []
-        # import ipdb; ipdb.set_trace()
+        
         if word_scores is None:
             word_scores = [1] * len(texts)
             gious = [1] * len(texts)

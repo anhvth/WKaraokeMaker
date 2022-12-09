@@ -19,9 +19,8 @@ parser.add_argument('--lr', '-lr', default=1e-4, type=float)
 parser.add_argument('--ckpt_pretrain', '-ckpt', default=None, type=str, help='path to pretrained checkpoint, lightning will load it automatically')
 parser.add_argument('--no-sot', dest='sot', action='store_false', help='disable sot, by default sot is enabled')
 parser.add_argument('--resume', action='store_true', help='resume training from last checkpoint')
-
-
 args = parser.parse_args()
+
 if args.debug: # debug mode
     print("DEBUG=1")
     args.gpus=1

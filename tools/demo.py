@@ -37,7 +37,6 @@ if __name__ == "__main__":
     #     audio_path = os.path.join("data", "audio.wav")
     #     with open(audio_path, "wb") as f:
     #         f.write(audio_file.getbuffer())
-
     # Upload lyrics file
 
     lyrics_file = st.file_uploader("Upload Lyrics", type=["json"])

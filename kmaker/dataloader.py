@@ -1,7 +1,6 @@
 from kmaker.data import *
 
 # Data utils/ augmentation
-
 def stack_input(inputs, target_shape=[80, 3000]):
     batch_shape = [len(inputs), *target_shape]
     inps = torch.zeros(batch_shape)

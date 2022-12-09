@@ -8,7 +8,7 @@ from kmaker.model import *
 
 
 def convert_result_to_competion_format(pred_word_segments, json_path, word_idx_to_milisec_ratio):
-    """_summary_
+    """ Convert result to zac2002 competition format
 
     Args:
         pred_word_segments (_type_): list of Segment
@@ -140,3 +140,5 @@ if __name__ == '__main__':
 
     os.system(f'cd outputs/{test_set}_{args.exp_name} && zip -r {test_set}_{args.exp_name}.zip submission')
     print('Output: {}'.format(osp.abspath(f'outputs/{test_set}_{args.exp_name}.zip')))
+    print('Submit -> https://challenge.zalo.ai/portal/e2e-question-answering/submission')
+    
