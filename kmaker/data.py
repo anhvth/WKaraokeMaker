@@ -59,21 +59,6 @@ def play_audio(waveform, sample_rate=16000):
             "Waveform with more than 2 channels are not supported.")
 
 
-# @memoize
-# def get_audio_len(audio_file):
-#     target_rate = 16000
-#     _audio, current_sample_rate = torchaudio.load(audio_file)
-#     _audio = FA.resample(_audio, current_sample_rate,
-#                          target_rate)
-#     return _audio.shape[-1] / target_rate
-
-# @memoize
-# def fast_get_audio_len(audio_file):
-#     try:
-#         return get_audio_len(audio_file)
-#     except:
-#         return -1
-
 
 def display_segment(waveform,
                     word,
