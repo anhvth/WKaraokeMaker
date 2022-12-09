@@ -38,7 +38,7 @@ wtokenizer = whisper.tokenizer.get_tokenizer(True,
                                              task='transcribe')
 
 from .segment import *
-from .w2v_aligner import gen_giou, merge_words
+from .w2v_aligner import merge_words
 
 
 def play_audio(waveform, sample_rate=16000):
@@ -169,8 +169,8 @@ class ItemAudioLabel:
             path = self.audio_file.replace('/songs/',
                                            '/precomputed_giou/')[:-3] + 'pkl'
             if not osp.exists(path):
-                print('Caculate giou')
-                gen_giou(self.path, audio_file=self.audio_file)
+                raise Exception('Please run tools/precompute_giou.py first')
+            
             w2v_segments, self._giou = mmcv.load(path)
             self.w2v_segments = [Segment(*_) for _ in w2v_segments]
         return np.array(self._giou)
