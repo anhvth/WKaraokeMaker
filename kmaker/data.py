@@ -33,9 +33,7 @@ def get_name(path):
 
 w2v_processor = Wav2Vec2Processor.from_pretrained("./pretrained/processor/")
 w2v_tokenizer = w2v_processor.tokenizer
-wtokenizer = whisper.tokenizer.get_tokenizer(True,
-                                             language="vi",
-                                             task='transcribe')
+wtokenizer = whisper.tokenizer.get_tokenizer(True, language="vi", task="transcribe")
 
 from .segment import *
 from .w2v_aligner import merge_words
@@ -55,18 +53,12 @@ def play_audio(waveform, sample_rate=16000):
     elif num_channels == 2:
         display(Audio((waveform[0], waveform[1]), rate=sample_rate))
     else:
-        raise ValueError(
-            "Waveform with more than 2 channels are not supported.")
+        raise ValueError("Waveform with more than 2 channels are not supported.")
 
 
-
-def display_segment(waveform,
-                    word,
-                    next_word=None,
-                    sample_rate=16000,
-                    ratio=320):
+def display_segment(waveform, word, next_word=None, sample_rate=16000, ratio=320):
     """
-        Display segment of audio
+    Display segment of audio
     """
     x0 = int(ratio * word.start)
     if next_word is not None:
@@ -82,7 +74,7 @@ def display_segment(waveform,
 
 def display_segment_with_time(waveform, start, end, sample_rate=16000):
     """
-        Display segment of audio
+    Display segment of audio
     """
     x0 = int(sample_rate * start)
     x1 = int(sample_rate * end)
@@ -90,39 +82,42 @@ def display_segment_with_time(waveform, start, end, sample_rate=16000):
     play_audio(segment, sample_rate=sample_rate)
 
 
-
 def load_auto_as_numpy(audio_path):
     "Load audio not using torchaudio"
     import soundfile as sf
+
     _audio, _sample_rate = sf.read(audio_path)
     if _audio.ndim == 2:
         _audio = _audio.mean(axis=1)
     return _audio, _sample_rate
-    
+
 
 def load_audio(path):
     import torchaudio.functional as FA
+
     try:
         _audio, _sample_rate = torchaudio.load(path)
     except:
         _audio, _sample_rate = load_auto_as_numpy(path)
     _audio = FA.resample(_audio, _sample_rate, 16000)
     return _audio[0].numpy()
-    
 
 
 class ItemAudioLabel:
     """
     Pair audio and label, use for training/data augmentation/ sanity check/ statistic .....
-    
+
     """
-    def __init__(self,
-                 path,
-                 audio_file=None, # Assume audio file in the corresonding "songs" directory with mp3 or wav extension
-                 model_type='detection',
-                 word_score=None,
-                 spliter=' ', # Use for split label into words in w2v forced alignment
-                 is_training=True):
+
+    def __init__(
+        self,
+        path,
+        audio_file=None,  # Assume audio file in the corresonding "songs" directory with mp3 or wav extension
+        model_type="detection",
+        word_score=None,
+        spliter=" ",  # Use for split label into words in w2v forced alignment
+        is_training=True,
+    ):
         self.path = path
         self.model_type = model_type
         self.spliter = spliter
@@ -133,11 +128,11 @@ class ItemAudioLabel:
 
         if audio_file is None:
             assert isinstance(path, str) and osp.exists(path), path
-            audio_file = path.replace('/labels/',
-                                      '/songs/').replace('.json', '.wav')
+            audio_file = path.replace("/labels/", "/songs/").replace(".json", ".wav")
             if not osp.exists(audio_file):
-                audio_file = path.replace('/labels/',
-                                          '/songs/').replace('.json', '.mp3')
+                audio_file = path.replace("/labels/", "/songs/").replace(
+                    ".json", ".mp3"
+                )
 
         assert osp.exists(audio_file), audio_file
 
@@ -146,7 +141,7 @@ class ItemAudioLabel:
 
     @property
     def data(self):
-        if not hasattr(self, '_data'):
+        if not hasattr(self, "_data"):
             path = self.path
             if isinstance(self.path, str):
                 self._data = mmcv.load(path) if isinstance(path, str) else path
@@ -156,19 +151,18 @@ class ItemAudioLabel:
 
     @property
     def audio(self):
-        if not hasattr(self, '_audio'):
+        if not hasattr(self, "_audio"):
             self._sample_rate = 16000
             self._audio = load_audio(self.audio_file)
         return self._audio
 
     @property
     def giou(self):
-        if not hasattr(self, '_giou'):
-            path = self.audio_file.replace('/songs/',
-                                           '/precomputed_giou/')[:-3] + 'pkl'
+        if not hasattr(self, "_giou"):
+            path = self.audio_file.replace("/songs/", "/precomputed_giou/")[:-3] + "pkl"
             if not osp.exists(path):
-                raise Exception('Please run tools/precompute_giou.py first')
-            
+                raise Exception("Please run tools/precompute_giou.py first")
+
             w2v_segments, self._giou = mmcv.load(path)
             self.w2v_segments = [Segment(*_) for _ in w2v_segments]
         return np.array(self._giou)
@@ -176,37 +170,34 @@ class ItemAudioLabel:
     @property
     def transcript(self):
         """
-            Join all words in transcript into a string
+        Join all words in transcript into a string
         """
         return self.spliter.join([_[0] for _ in self.words])
 
     @property
     def word_score(self):
-        """ W2v score of each word in transcript
+        """W2v score of each word in transcript
 
         Returns:
             List[float]: score of each word
         """
-        if not hasattr(self, '_word_score'):
+        if not hasattr(self, "_word_score"):
             self.giou
             self._word_score = [
-                word.score for word in merge_words(self.w2v_segments, '|')
+                word.score for word in merge_words(self.w2v_segments, "|")
             ]
         return self._word_score
 
     def get_words_meta(self):
         text, start, end = list(zip(*self.words))
-        # Example 
+        # Example
         # text:('Xin', 'có', 'một', 'lần', 'uống', 'chén', 'muộn', 'phiền', 'Nhà', 'im', 'đứng', 'cửa', 'cài', 'đóng', 'then', 'Vườn', 'mưa', 'xuống', 'hành', 'lang', 'tối', 'tăm', 'Về', 'thôi', 'nhé,', 'cổng', 'chào', 'cuối', 'sân')
         # start:(0.0, 0.421, 1.011, 1.36, 2.821, 3.561, 3.941, 4.631, 8.75, 9.411, 9.79, 10.98, 11.72, 12.0, 12.371, 14.5, 15.04, 15.49, 16.591, 17.35, 17.661, 18.161, 20.14, 20.47, 20.81, 22.18, 22.82, 23.13, 23.55)
         # end: (0.421, 1.011, 1.36, 1.571, 3.071, 3.941, 4.571, 4.731, 9.381, 9.73, 10.94, 11.72, 12.0, 12.301, 13.29, 15.04, 15.19, 16.171, 17.131, 17.651, 18.151, 18.361, 20.47, 20.81, 22.13, 22.74, 23.13, 23.55, 23.94)
         if self.is_training:
-            ret = self.encode_for_detection(text,
-                                       start,
-                                       end,
-                                       self.word_score,
-                                       self.giou,
-                                       mode_token=False)
+            ret = self.encode_for_detection(
+                text, start, end, self.word_score, self.giou, mode_token=False
+            )
         else:
             ret = self.encode_for_detection(text, start, end, mode_token=False)
         return ret
@@ -221,18 +212,18 @@ class ItemAudioLabel:
 
     @property
     def sample_rate(self):
-        if not hasattr(self, '_sample_rate'):
+        if not hasattr(self, "_sample_rate"):
             self.audio
 
         self._sample_rate
         return self._sample_rate
 
-    def play(self, by='line', with_giou=False):
+    def play(self, by="line", with_giou=False):
         word_split_ids = [0]
         for i, line in enumerate(self.data):
-            split_id = word_split_ids[-1] + len(line['l'])
+            split_id = word_split_ids[-1] + len(line["l"])
             word_split_ids.append(split_id)
-        if by == 'word':
+        if by == "word":
             for i, (word, s, e) in enumerate(self.words):
                 if e <= s:
                     e = s + 0.1
@@ -248,16 +239,18 @@ class ItemAudioLabel:
 
     @property
     def words(self):
-        if not hasattr(self, '_words'):
+        if not hasattr(self, "_words"):
             out = ()
             words = []
             for i, line in enumerate(self.data):
-                start = line['s'] / 1000
-                end = line['e'] / 1000
+                start = line["s"] / 1000
+                end = line["e"] / 1000
                 if end <= start:
                     end = start + 0.1
-                words += [(word_meta['d'], word_meta['s'] / 1000,
-                           word_meta['e'] / 1000) for word_meta in line['l']]
+                words += [
+                    (word_meta["d"], word_meta["s"] / 1000, word_meta["e"] / 1000)
+                    for word_meta in line["l"]
+                ]
             self._words = words
         return self._words
 
@@ -267,18 +260,14 @@ class ItemAudioLabel:
 
     @property
     def w2v_tokens(self):
-        if not hasattr(self, '_w2v_tokens'):
+        if not hasattr(self, "_w2v_tokens"):
             self._w2v_tokens = w2v_tokenizer.encode(self.transcript)
         return self._w2v_tokens
 
-
-    def encode_for_detection(self, texts,
-                            starts,
-                            ends,
-                            word_scores=None,
-                            gious=None,
-                            mode_token=False):
-        """ Custom input for detection
+    def encode_for_detection(
+        self, texts, starts, ends, word_scores=None, gious=None, mode_token=False
+    ):
+        """Custom input for detection
 
         Args:
             texts (str): Raw input text
@@ -295,20 +284,21 @@ class ItemAudioLabel:
         decode_position = []
         bboxes = []
         loss_scale = []
-        
+
         if word_scores is None:
             word_scores = [1] * len(texts)
             gious = [1] * len(texts)
 
-        for i, (s, t, e, word_score,
-                giou) in enumerate(zip(starts, texts, ends, word_scores, gious)):
+        for i, (s, t, e, word_score, giou) in enumerate(
+            zip(starts, texts, ends, word_scores, gious)
+        ):
 
-            tt = wtokenizer.encode(' ' + t)
+            tt = wtokenizer.encode(" " + t)
             tokens += [*tt]
             if not mode_token:
                 decode_position += [len(tokens)]
                 bboxes.append(to_bbox_cxcywh(s, e))
-                if len(t.split(' ')) > 1:
+                if len(t.split(" ")) > 1:
                     _loss_scale = 0
                 elif word_score < 0.1 or giou < 0.1:
                     _loss_scale = 0
@@ -326,8 +316,10 @@ class ItemAudioLabel:
             tokens=tokens,
             loss_scale=np.array(loss_scale),
         )
+
+
 def get_json_paths(txt_split):
-    """ Get path to json file from txt_split
+    """Get path to json file from txt_split
 
     Args:
         txt_split: path to txt file

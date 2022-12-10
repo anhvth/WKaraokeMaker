@@ -1,7 +1,7 @@
 import os
 
 import pkg_resources
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="kmaker",
@@ -21,5 +21,5 @@ setup(
         # )
     ],
     include_package_data=True,
-    extras_require={'dev': ['pytest']},
+    extras_require={"dev": ["pytest"]},
 )

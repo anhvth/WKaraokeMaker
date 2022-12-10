@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import whisper
 from fastcore.all import patch
-
 from transformers import AutoModelForSpeechSeq2Seq
 
 from kmaker.data import wtokenizer
@@ -13,46 +12,52 @@ from kmaker.data import wtokenizer
 
 def get_whisper(model_name):
     """Get the pretrained whisper model"""
-    return AutoModelForSpeechSeq2Seq.from_pretrained(f"openai/whisper-{model_name}", 
-                                                  cache_dir='pretrained/transformers', use_cache=False, 
-                                                  local_files_only=False)
-
-    
+    return AutoModelForSpeechSeq2Seq.from_pretrained(
+        f"openai/whisper-{model_name}",
+        cache_dir="pretrained/transformers",
+        use_cache=False,
+        local_files_only=False,
+    )
 
 
 class MLP(nn.Module):
-    """ Very simple multi-layer perceptron (also called FFN)"""
+    """Very simple multi-layer perceptron (also called FFN)"""
 
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
+        self.layers = nn.ModuleList(
+            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
+        )
 
     def forward(self, x):
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
         return x
 
-    
+
 def cal_ctc(logits, labels):
-    input_lengths = torch.tensor([1500]*len(logits))
+    input_lengths = torch.tensor([1500] * len(logits))
 
     labels_mask = labels >= 0
     target_lengths = labels_mask.sum(-1)
     flattened_targets = labels.masked_select(labels_mask)
-    log_probs = nn.functional.log_softmax(logits, dim=-1, dtype=torch.float32).transpose(0, 1)
+    log_probs = nn.functional.log_softmax(
+        logits, dim=-1, dtype=torch.float32
+    ).transpose(0, 1)
     with torch.backends.cudnn.flags(enabled=False):
         loss = nn.functional.ctc_loss(
             log_probs,
             flattened_targets,
             input_lengths,
             target_lengths,
-            blank=109, #w2vmeta['w2vmodel'].config.pad_token_id
-            reduction='mean',
+            blank=109,  # w2vmeta['w2vmodel'].config.pad_token_id
+            reduction="mean",
             zero_infinity=False,
         )
     return loss
+
 
 # def forward_w2v(
 #     lm_head,
@@ -63,7 +68,7 @@ def cal_ctc(logits, labels):
 #     return_dict= None,
 #     labels= None,
 #     ):
-    
+
 
 #     logits = lm_head(input_values)
 #     loss = None
@@ -91,19 +96,17 @@ def cal_ctc(logits, labels):
 #     )
 
 
-
-
 def modify_whisper(model, sot):
     """Modify the whisper model to add ctc loss (encoder), and bbox embedding(decoder)"""
-    model.model.ctc_lm_head =  nn.Sequential(
+    model.model.ctc_lm_head = nn.Sequential(
         nn.LayerNorm(512),
         MLP(512, 512, 110, 3),
     )
     if sot:
-        
+
         def get_pos_embed_layer(model):
             pos_layer = nn.Linear(512, 1501, bias=False)
-            proj_weight = model.proj_out.weight[wtokenizer.timestamp_begin:]
+            proj_weight = model.proj_out.weight[wtokenizer.timestamp_begin :]
             with torch.no_grad():
                 weights = torch.from_numpy(proj_weight.numpy())
             pos_layer.weight = torch.nn.Parameter(data=weights)
@@ -111,6 +114,7 @@ def modify_whisper(model, sot):
                 pos_layer,
                 MLP(1501, 512, 4, 3),
             )
+
         model.bbox_embed = get_pos_embed_layer(model).requires_grad_(True)
     else:
         model.bbox_embed = MLP(512, 512, 4, 3)
@@ -118,13 +122,12 @@ def modify_whisper(model, sot):
     # model.model.encoder.requires_grad_(True)
     # model.model.decoder.layers[-1].requires_grad_(True)
 
-    
     from transformers.models.whisper.modeling_whisper import (
         CrossEntropyLoss, shift_tokens_right)
-    
+
     @patch
     def forward_with_ctc(
-        self:type(model.model),
+        self: type(model.model),
         input_features=None,
         decoder_input_ids=None,
         decoder_attention_mask=None,
@@ -138,12 +141,20 @@ def modify_whisper(model, sot):
         output_hidden_states=None,
         return_dict=None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
+        )
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
         )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         encoder_outputs = self.encoder(
             input_features,
@@ -152,7 +163,6 @@ def modify_whisper(model, sot):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-
 
         # decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
         ehs = encoder_outputs[0]
@@ -174,14 +184,13 @@ def modify_whisper(model, sot):
             return_dict=return_dict,
         )
         return {
-            'dec_last_hidden_state':decoder_outputs.last_hidden_state,
-            'enc_logits':enc_logits,
+            "dec_last_hidden_state": decoder_outputs.last_hidden_state,
+            "enc_logits": enc_logits,
         }
-    
-    
+
     @patch
     def forward_both(
-        self:type(model), # whisper forward wraper with loss
+        self: type(model),  # whisper forward wraper with loss
         input_features=None,
         decoder_input_ids=None,
         decoder_attention_mask=None,
@@ -199,7 +208,9 @@ def modify_whisper(model, sot):
         return_dict=None,
     ):
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         if labels is not None:
             if decoder_input_ids is None and decoder_inputs_embeds is None:
@@ -210,7 +221,6 @@ def modify_whisper(model, sot):
         outputs = self.model.forward_with_ctc(
             input_features,
             decoder_input_ids=decoder_input_ids,
-            
             decoder_attention_mask=decoder_attention_mask,
             head_mask=head_mask,
             decoder_head_mask=decoder_head_mask,
@@ -223,28 +233,28 @@ def modify_whisper(model, sot):
             return_dict=return_dict,
         )
 
-        lm_logits = self.proj_out(outputs['dec_last_hidden_state'])
-        bbox_pred = self.bbox_embed(outputs['dec_last_hidden_state']).sigmoid()
+        lm_logits = self.proj_out(outputs["dec_last_hidden_state"])
+        bbox_pred = self.bbox_embed(outputs["dec_last_hidden_state"]).sigmoid()
         loss = None
         dec_loss = None
         if labels is not None:
-            loss_fct = CrossEntropyLoss(reduction='none')
+            loss_fct = CrossEntropyLoss(reduction="none")
 
-            dec_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1), )
-        enc_logits=outputs['enc_logits']
+            dec_loss = loss_fct(
+                lm_logits.view(-1, self.config.vocab_size),
+                labels.view(-1),
+            )
+        enc_logits = outputs["enc_logits"]
         enc_loss = None
         if ctc_labels is not None:
             enc_loss = cal_ctc(enc_logits, ctc_labels)
-        
+
         return dict(
-            enc_logits = enc_logits,
-            enc_loss = enc_loss,
+            enc_logits=enc_logits,
+            enc_loss=enc_loss,
             dec_logits=lm_logits,
-            dec_loss = dec_loss,
-            bbox_pred=bbox_pred,            
+            dec_loss=dec_loss,
+            bbox_pred=bbox_pred,
         )
+
     return model
-
-
-
-

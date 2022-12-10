@@ -6,13 +6,16 @@ Example streamlit app for the demo,
 """
 # Import libraries
 import os
+
 # try import streamlit if the module does not exist then install it with os.system
 try:
     import streamlit as st
 except ModuleNotFoundError:
     os.system("pip install streamlit")
     import streamlit as st
+
 from glob import glob
+
 # import generate_karaoke_video
 from tools.make_karaoke_video import generate_karaoke_video
 
@@ -35,13 +38,13 @@ if __name__ == "__main__":
         # Save lyrics to data folder
         lyrics_path = os.path.join("data", "lyrics.json")
         file_name = lyrics_file.name
-        
+
         with open(lyrics_path, "wb") as f:
             f.write(lyrics_file.getbuffer())
 
     # Generate karaoke video
     if lyrics_file is not None:
-        query = './data/*/songs/' + file_name.replace('.json', '.*')
+        query = "./data/*/songs/" + file_name.replace(".json", ".*")
         print(query)
         audio_path = glob(query)[0]
         output_video_path = os.path.join("output", "output.mp4")
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         cmd = f"/usr/bin/ffmpeg -y -i {output_video_path} -vcodec libx264 {tmp_output_video_path}"
         st.write(cmd)
         os.system(cmd)
-        
+
         output_video_path = tmp_output_video_path
         video = open(output_video_path, "rb").read()
         st.video(video)
