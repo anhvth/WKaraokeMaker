@@ -27,6 +27,10 @@ Please take a look at, kmaker/model.py for more details.
     pip install -r requirements
     pip install -e ./
 ```
+Download pretrained and save to pretrained/whisper_karaoke_base_vn.pth
+```
+https://drive.google.com/file/d/1zHZ7DYRghu9VTtT_P2G74Gky-68cUcl-/view?usp=share_link
+```
 ## Usage
 ```bash
     python tools/predict_one_song.py asset/12300.json --audio_file asset/12300.mp3 --output_file output/12300.mp4
