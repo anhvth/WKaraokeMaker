@@ -13,7 +13,8 @@ It is a task that can be used in various fields such as music production and kar
 * We modified whisper model to fit the competition task. An extra head is added to the encoder and trained with ctc loss.
 The decoder is extended withan `word_seg_embed` head  to predict the word segments (start, end). We simply trained it with giou+l1 loss. The other part is kept the same as the original whisper model.
 Please take a look at, kmaker/model.py for more details.
-
+# Pipeline
+![pipeline](asset/pipeline.png)
 ## Installation
 * ffmpeg # for audio/video processing
 * python >= 3.8
